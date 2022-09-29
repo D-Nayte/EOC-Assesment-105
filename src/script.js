@@ -47,12 +47,15 @@ const createTable = () => {
   tableHeadSalary.textContent = "Salary";
   tableHeadSalary.dataset.col = "salary";
 
+  const tableBody = document.createElement("tbody");
+
   tableHeadRow.append(tableHeadFirstName);
   tableHeadRow.append(tableHeadLastName);
   tableHeadRow.append(tableHeadHireDate);
   tableHeadRow.append(tableHeadSalary);
   tableHead.append(tableHeadRow);
   fragment.appendChild(tableHead);
+  fragment.appendChild(tableBody);
 
   tableHead.addEventListener("click", (event) => sortArray(event));
 
@@ -112,13 +115,13 @@ const generateNewEmployeeData = (user) => {
   return fragment;
 };
 
-const drawUserDataOnTable = () => {
+const printUserDataOnTable = () => {
   employees.forEach((user) => {
-    const table = document.querySelector("#employees");
+    const tableBody = document.querySelector("tbody");
     const newRow = document.createElement("tr");
 
     newRow.append(generateNewEmployeeData(user));
-    table.append(newRow);
+    tableBody.append(newRow);
   });
 };
 
@@ -131,7 +134,7 @@ async function generateUserDataSet() {
     const employee = new Employee(users[index].first, users[index].last, hireDates[index], salarys[index]);
     employees.push(employee);
   }
-  drawUserDataOnTable();
+  printUserDataOnTable();
 }
 
 function sortArray(event) {
@@ -185,7 +188,7 @@ function sortArray(event) {
   createTable();
   let col = document.querySelector(`[data-col="${sortType}"]`);
   col.dataset.direct = sortDirection;
-  drawUserDataOnTable();
+  printUserDataOnTable();
 }
 
 function getDateAsNumbersIndividually(firstUser, secondUser) {
