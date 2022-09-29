@@ -1,14 +1,14 @@
 import { Employee } from "./classes.js";
 
-const dataURLBase = "https://docs.google.com/spreadsheets/d/";
-const dataURLEnd = "/gviz/tq?tqx=out:json&tq&gid=";
-const id = "1C1-em4w0yHmd2N7__9cCSFzxBEf_8r74hQJBsR6qWnE";
-const gids = ["0", "1574569648", "1605451198"];
+// const dataURLBase = "https://docs.google.com/spreadsheets/d/";
+// const dataURLEnd = "/gviz/tq?tqx=out:json&tq&gid=";
+// const id = "1C1-em4w0yHmd2N7__9cCSFzxBEf_8r74hQJBsR6qWnE";
+// const gids = ["0", "1574569648", "1605451198"];
 let employees = [];
 
+generateUserDataSet();
 window.addEventListener("load", () => {
   createTable();
-  generateUserDataSet();
 });
 
 async function getDataFromSheet(gids) {
@@ -59,8 +59,8 @@ const createTable = () => {
   table.appendChild(fragment);
 };
 
-const getUserNames = async () => {
-  let response = await getDataFromSheet(0);
+async function getUserNames(response) {
+  response = await response;
   let userNames = response.table.rows;
   userNames.shift();
 
@@ -72,23 +72,23 @@ const getUserNames = async () => {
     }
   });
   return newUserDataSet;
-};
+}
 
-const getHireDates = async () => {
-  let response = await getDataFromSheet("1574569648");
+async function getHireDates(response) {
+  response = await response;
   let hireDates = response.table.rows;
 
   hireDates = hireDates.map((each) => each.c[0].f);
   return hireDates;
-};
+}
 
-const getSalarys = async () => {
-  let response = await getDataFromSheet("1605451198");
+async function getSalarys(response) {
+  response = await response;
   let salarys = response.table.rows;
 
   salarys = salarys.map((each) => each.c[0].f);
   return salarys;
-};
+}
 
 const generateNewEmployeeData = (user) => {
   const dateSettings = { month: "long", day: "numeric", year: "numeric" };
@@ -122,17 +122,17 @@ const drawUserDataOnTable = () => {
   });
 };
 
-const generateUserDataSet = async () => {
-  const users = await getUserNames();
-  const hireDates = await getHireDates();
-  const salarys = await getSalarys();
+async function generateUserDataSet() {
+  const users = await getUserNames(fetchNames);
+  const hireDates = await getHireDates(fetchHireDates);
+  const salarys = await getSalarys(fetchSalarys);
 
   for (let index = 0; index < users.length; index++) {
     const employee = new Employee(users[index].first, users[index].last, hireDates[index], salarys[index]);
     employees.push(employee);
   }
   drawUserDataOnTable();
-};
+}
 
 function sortArray(event) {
   //choose the column to sort based on "data-col" from event, setup wich sort direction to choose based on dataset too
