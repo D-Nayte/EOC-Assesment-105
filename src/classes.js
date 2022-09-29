@@ -1,7 +1,7 @@
 export class Employee {
   constructor(firstName, lastName, hireDate, salary) {
-    this.lastName = lastName;
-    this.firstName = firstName;
+    this.last = lastName;
+    this.first = firstName;
     this.hireDate = hireDate;
     this.salary = _salary();
     this.salaryInt = salary;

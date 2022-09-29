@@ -1,58 +1,28 @@
 import { Employee } from "./classes.js";
 
-// const dataURLBase = "https://docs.google.com/spreadsheets/d/";
-// const dataURLEnd = "/gviz/tq?tqx=out:json&tq&gid=";
-// const id = "1C1-em4w0yHmd2N7__9cCSFzxBEf_8r74hQJBsR6qWnE";
-// const gids = ["0", "1574569648", "1605451198"];
+let tableHeadList;
 let employees = [];
 
-generateUserDataSet();
 window.addEventListener("load", () => {
-  createTable();
+  generateUserDataSet();
 });
 
-async function getDataFromSheet(gids) {
-  const urlToCall = `${dataURLBase}${id}${dataURLEnd}${gids}`;
-  try {
-    const response = await fetch(urlToCall);
-    const dataInText = await response.text();
-    const dataFormatted = dataInText.substring(47).slice(0, -2);
-    const json = JSON.parse(dataFormatted);
-    return json;
-  } catch (error) {
-    console.error("API ERROR:", error);
-  }
-}
-
-const createTable = () => {
+//creates the tHead with alle information, based on the global "tableHeadList" and adds eventlistener for sorting
+const createTableHead = () => {
   const table = document.querySelector("#employees");
   table.innerHTML = "";
   const fragment = document.createDocumentFragment();
   const tableHead = document.createElement("thead");
   const tableHeadRow = document.createElement("tr");
-
-  const tableHeadLastName = document.createElement("th");
-  tableHeadLastName.textContent = "Last";
-  tableHeadLastName.dataset.col = "lastName";
-
-  const tableHeadFirstName = document.createElement("th");
-  tableHeadFirstName.textContent = "First";
-  tableHeadFirstName.dataset.col = "firstName";
-
-  const tableHeadHireDate = document.createElement("th");
-  tableHeadHireDate.textContent = "Hire Date";
-  tableHeadHireDate.dataset.col = "hireDate";
-
-  const tableHeadSalary = document.createElement("th");
-  tableHeadSalary.textContent = "Salary";
-  tableHeadSalary.dataset.col = "salary";
-
   const tableBody = document.createElement("tbody");
 
-  tableHeadRow.append(tableHeadFirstName);
-  tableHeadRow.append(tableHeadLastName);
-  tableHeadRow.append(tableHeadHireDate);
-  tableHeadRow.append(tableHeadSalary);
+  tableHeadList.forEach((data) => {
+    const tableItem = document.createElement("th");
+    tableItem.textContent = data.charAt(0).toUpperCase() + data.slice(1);
+    tableItem.dataset.col = data;
+    tableHeadRow.append(tableItem);
+  });
+
   tableHead.append(tableHeadRow);
   fragment.appendChild(tableHead);
   fragment.appendChild(tableBody);
@@ -60,49 +30,57 @@ const createTable = () => {
   tableHead.addEventListener("click", (event) => sortArray(event));
 
   table.appendChild(fragment);
+  return tableBody;
 };
 
 async function getUserNames(response) {
+  //creates an array with the names an an array with the table head informations
   response = await response;
   let userNames = response.table.rows;
-  userNames.shift();
 
   const newUserDataSet = userNames.map((each) => {
     const firstName = each.c[0].v;
     const lastName = each.c[1].v;
-    if (firstName !== "first" || lastName !== "last") {
-      return { first: firstName, last: lastName };
-    }
+    return { first: firstName, last: lastName };
   });
-  return newUserDataSet;
+  let usersHead = newUserDataSet.shift();
+  //Convert the responding object for table Head into Array
+  usersHead = Object.keys(usersHead).map((key) => key);
+  return { users: newUserDataSet, usersHead: usersHead };
 }
 
 async function getHireDates(response) {
+  //create an array of dates out from the request; returns the array and the table Head information
   response = await response;
   let hireDates = response.table.rows;
+  const hireHead = response.table.cols[0].label;
 
   hireDates = hireDates.map((each) => each.c[0].f);
-  return hireDates;
+  return { hireDates: hireDates, hireHead: hireHead };
 }
 
 async function getSalarys(response) {
+  //create an array of salarys out from the request; returns the array and the table Head information
   response = await response;
   let salarys = response.table.rows;
+  const salarysHead = response.table.cols[0].label;
 
   salarys = salarys.map((each) => each.c[0].f);
-  return salarys;
+  return { salarys: salarys, salarysHead: salarysHead };
 }
 
 const generateNewEmployeeData = (user) => {
+  //formatting to wanted Date format MMM DD YYYY
   const dateSettings = { month: "long", day: "numeric", year: "numeric" };
   let date = new Date(user.hireDate);
   date = date.toLocaleDateString("en-US", dateSettings).replace(",", "");
 
+  //generate the "td" with all needed information for each user
   const fragment = document.createDocumentFragment();
   const newFirst = document.createElement("td");
-  newFirst.textContent = user.firstName;
+  newFirst.textContent = user.first;
   const newLast = document.createElement("td");
-  newLast.textContent = user.lastName;
+  newLast.textContent = user.last;
   const newHireDate = document.createElement("td");
   newHireDate.textContent = date;
   const newSalary = document.createElement("td");
@@ -116,8 +94,11 @@ const generateNewEmployeeData = (user) => {
 };
 
 const printUserDataOnTable = () => {
+  //create the Table head from given parameter
+  const tableBody = createTableHead();
+
+  //create the row with all the datas out from the employees Array
   employees.forEach((user) => {
-    const tableBody = document.querySelector("tbody");
     const newRow = document.createElement("tr");
 
     newRow.append(generateNewEmployeeData(user));
@@ -126,10 +107,13 @@ const printUserDataOnTable = () => {
 };
 
 async function generateUserDataSet() {
-  const users = await getUserNames(fetchNames);
-  const hireDates = await getHireDates(fetchHireDates);
-  const salarys = await getSalarys(fetchSalarys);
+  // use the returning clean arrays to create employee object for each entry
+  const { users, usersHead } = await getUserNames(fetchNames);
+  const { hireDates, hireHead } = await getHireDates(fetchHireDates);
+  const { salarys, salarysHead } = await getSalarys(fetchSalarys);
+  tableHeadList = [...usersHead, hireHead, salarysHead];
 
+  //store the employee object in global Array
   for (let index = 0; index < users.length; index++) {
     const employee = new Employee(users[index].first, users[index].last, hireDates[index], salarys[index]);
     employees.push(employee);
@@ -144,7 +128,7 @@ function sortArray(event) {
   let sortDirection = "reverse";
 
   //sorting by employees Name
-  if (sortType === "firstName" || sortType === "lastName") {
+  if (sortType === "first" || sortType === "last") {
     employees.sort((firstUser, secondUser) => {
       if (firstUser[sortType] < secondUser[sortType]) {
         return -1;
@@ -163,7 +147,7 @@ function sortArray(event) {
   }
 
   //sort by Date
-  if (sortType === "hireDate") {
+  if (sortType === "hire date") {
     employees.sort((firstUser, secondUser) => {
       const { firstYear, secondYear, firstMonth, secondMonth, firstDay, secondDay } = getDateAsNumbersIndividually(firstUser, secondUser);
 
@@ -179,16 +163,18 @@ function sortArray(event) {
   }
 
   //revert the sortet array if its already sorted and the relatetd col is clicked again
+  console.log("choosedColDirection", choosedColDirection);
   if (choosedColDirection === "reverse") {
+    console.log("REVERSE");
     employees.reverse();
     sortDirection = "default";
   }
 
   //repaint the table; mark the columens with sort direction
-  createTable();
+  createTableHead();
+  printUserDataOnTable();
   let col = document.querySelector(`[data-col="${sortType}"]`);
   col.dataset.direct = sortDirection;
-  printUserDataOnTable();
 }
 
 function getDateAsNumbersIndividually(firstUser, secondUser) {
