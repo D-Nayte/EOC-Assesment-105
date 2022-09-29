@@ -163,9 +163,7 @@ function sortArray(event) {
   }
 
   //revert the sortet array if its already sorted and the relatetd col is clicked again
-  console.log("choosedColDirection", choosedColDirection);
   if (choosedColDirection === "reverse") {
-    console.log("REVERSE");
     employees.reverse();
     sortDirection = "default";
   }
