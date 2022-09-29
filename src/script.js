@@ -71,7 +71,7 @@ async function getSalarys(response) {
 
 const generateNewEmployeeData = (user) => {
   //formatting to wanted Date format MMM DD YYYY
-  const dateSettings = { month: "long", day: "numeric", year: "numeric" };
+  const dateSettings = { month: "short", day: "numeric", year: "numeric" };
   let date = new Date(user.hireDate);
   date = date.toLocaleDateString("en-US", dateSettings).replace(",", "");
 
