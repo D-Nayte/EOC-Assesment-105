@@ -118,10 +118,34 @@ async function generateUserDataSet() {
     const employee = new Employee(users[index].first, users[index].last, hireDates[index], salarys[index]);
     employees.push(employee);
   }
-  printUserDataOnTable();
+  sortArray("load");
+
+  // printUserDataOnTable();
 }
 
 function sortArray(event) {
+  //initial sort; by last name
+  if (event === "load") {
+    employees.sort((firstUser, secondUser) => {
+      if (firstUser["last"] === secondUser["last"]) {
+        if (firstUser["first"] < secondUser["first"]) {
+          return -1;
+        } else {
+          return 1;
+        }
+      }
+      if (firstUser["last"] < secondUser["last"]) {
+        return -1;
+      }
+      return 1;
+    });
+    createTableHead();
+    printUserDataOnTable();
+
+    let col = document.querySelector(`[data-col="last"]`);
+    col.dataset.direct = "reverse";
+    return;
+  }
   //choose the column to sort based on "data-col" from event, setup wich sort direction to choose based on dataset too
   const sortType = event.target.dataset.col;
   let choosedColDirection = event.target.dataset.direct;
@@ -130,6 +154,13 @@ function sortArray(event) {
   //sorting by employees Name
   if (sortType === "first" || sortType === "last") {
     employees.sort((firstUser, secondUser) => {
+      if (firstUser["last"] === secondUser["last"]) {
+        if (firstUser["first"] < secondUser["first"]) {
+          return -1;
+        } else {
+          return 1;
+        }
+      }
       if (firstUser[sortType] < secondUser[sortType]) {
         return -1;
       }
