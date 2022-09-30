@@ -145,6 +145,7 @@ function sortArray(event) {
       }
       return 1;
     });
+    // employees.reverse();
     createTableHead();
     printUserDataOnTable();
 
@@ -233,3 +234,5 @@ function getDateAsNumbersIndividually(firstUser, secondUser) {
 
   return { firstYear, secondYear, firstMonth, secondMonth, firstDay, secondDay };
 }
+
+function createHead(params) {}
