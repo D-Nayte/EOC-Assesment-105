@@ -86,8 +86,8 @@ const generateNewEmployeeData = (user) => {
   const newSalary = document.createElement("td");
   newSalary.textContent = user.salary;
 
-  fragment.append(newFirst);
   fragment.append(newLast);
+  fragment.append(newFirst);
   fragment.append(newHireDate);
   fragment.append(newSalary);
   return fragment;
@@ -111,7 +111,7 @@ async function generateUserDataSet() {
   const { users, usersHead } = await getUserNames(fetchNames);
   const { hireDates, hireHead } = await getHireDates(fetchHireDates);
   const { salarys, salarysHead } = await getSalarys(fetchSalarys);
-  tableHeadList = [...usersHead, hireHead, salarysHead];
+  tableHeadList = [...usersHead.reverse(), hireHead, salarysHead];
 
   //store the employee object in global Array
   for (let index = 0; index < users.length; index++) {
@@ -119,8 +119,6 @@ async function generateUserDataSet() {
     employees.push(employee);
   }
   sortArray("load");
-
-  // printUserDataOnTable();
 }
 
 function sortArray(event) {
@@ -146,7 +144,7 @@ function sortArray(event) {
     col.dataset.direct = "reverse";
     return;
   }
-  //choose the column to sort based on "data-col" from event, setup wich sort direction to choose based on dataset too
+  //choosed column to sort based on "data-col" from event, setup wich sort direction to choose based on dataset too
   const sortType = event.target.dataset.col;
   let choosedColDirection = event.target.dataset.direct;
   let sortDirection = "reverse";
