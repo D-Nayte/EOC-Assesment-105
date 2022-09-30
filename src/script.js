@@ -108,9 +108,17 @@ const printUserDataOnTable = () => {
 
 async function generateUserDataSet() {
   // use the returning clean arrays to create employee object for each entry
-  const { users, usersHead } = await getUserNames(fetchNames);
-  const { hireDates, hireHead } = await getHireDates(fetchHireDates);
-  const { salarys, salarysHead } = await getSalarys(fetchSalarys);
+  let { users, usersHead } = await getUserNames(fetchNames);
+  let { hireDates, hireHead } = await getHireDates(fetchHireDates);
+  let { salarys, salarysHead } = await getSalarys(fetchSalarys);
+
+  // chapitalized both starting letters from "hire date"; string > array > string
+  hireHead = hireHead
+    .split(" ")
+    .map((string) => string.charAt(0).toUpperCase() + string.slice(1))
+    .join()
+    .replace(",", " ");
+
   tableHeadList = [...usersHead.reverse(), hireHead, salarysHead];
 
   //store the employee object in global Array
