@@ -1,37 +1,7 @@
-import { Employee } from "./classes.js";
+import { Employee, TableHead } from "./classes.js";
 
-let tableHeadList;
-let employees = [];
-
-window.addEventListener("load", () => {
-  generateUserDataSet();
-});
-
-//creates the tHead with alle information, based on the global "tableHeadList" and adds eventlistener for sorting
-const createTableHead = () => {
-  const table = document.querySelector("#employees");
-  table.innerHTML = "";
-  const fragment = document.createDocumentFragment();
-  const tableHead = document.createElement("thead");
-  const tableHeadRow = document.createElement("tr");
-  const tableBody = document.createElement("tbody");
-
-  tableHeadList.forEach((data) => {
-    const tableItem = document.createElement("th");
-    tableItem.textContent = data.charAt(0).toUpperCase() + data.slice(1);
-    tableItem.dataset.col = data;
-    tableHeadRow.append(tableItem);
-  });
-
-  tableHead.append(tableHeadRow);
-  fragment.appendChild(tableHead);
-  fragment.appendChild(tableBody);
-
-  tableHead.addEventListener("click", (event) => sortArray(event));
-
-  table.appendChild(fragment);
-  return tableBody;
-};
+generateTableDatas();
+window.addEventListener("load", () => {});
 
 async function getUserNames(response) {
   //creates an array with the names an an array with the table head informations
@@ -69,170 +39,83 @@ async function getSalarys(response) {
   return { salarys: salarys, salarysHead: salarysHead };
 }
 
-const generateNewEmployeeData = (user) => {
-  //formatting to wanted Date format MMM DD YYYY
-  const dateSettings = { month: "short", day: "numeric", year: "numeric" };
-  let date = new Date(user.hireDate);
-  date = date.toLocaleDateString("en-US", dateSettings).replace(",", "");
+function createTableHead(usersHead, hireHead, salarysHead) {
+  usersHead = usersHead.map((title) => new TableHead(title, sortNames));
+  hireHead = new TableHead(hireHead, sortByDate);
+  salarysHead = new TableHead(salarysHead, sortSalaryByNumbers);
 
-  //generate the "td" with all needed information for each user
-  const fragment = document.createDocumentFragment();
-  const newFirst = document.createElement("td");
-  newFirst.textContent = user.first;
-  const newLast = document.createElement("td");
-  newLast.textContent = user.last;
-  const newHireDate = document.createElement("td");
-  newHireDate.textContent = date;
-  const newSalary = document.createElement("td");
-  newSalary.textContent = user.salary;
+  return [...usersHead.reverse(), hireHead, salarysHead];
+}
 
-  fragment.append(newLast);
-  fragment.append(newFirst);
-  fragment.append(newHireDate);
-  fragment.append(newSalary);
-  return fragment;
-};
+function createEmployees(users, hireDates, salarys) {
+  let employees = [];
 
-const printUserDataOnTable = () => {
-  //create the Table head from given parameter
-  const tableBody = createTableHead();
-
-  //create the row with all the datas out from the employees Array
-  employees.forEach((user) => {
-    const newRow = document.createElement("tr");
-
-    newRow.append(generateNewEmployeeData(user));
-    tableBody.append(newRow);
-  });
-};
-
-async function generateUserDataSet() {
-  // use the returning clean arrays to create employee object for each entry
-  let { users, usersHead } = await getUserNames(fetchNames);
-  let { hireDates, hireHead } = await getHireDates(fetchHireDates);
-  let { salarys, salarysHead } = await getSalarys(fetchSalarys);
-
-  // chapitalized both starting letters from "hire date"; string > array > string
-  hireHead = hireHead
-    .split(" ")
-    .map((string) => string.charAt(0).toUpperCase() + string.slice(1))
-    .join()
-    .replace(",", " ");
-
-  tableHeadList = [...usersHead.reverse(), hireHead, salarysHead];
-
-  //store the employee object in global Array
   for (let index = 0; index < users.length; index++) {
     const employee = new Employee(users[index].first, users[index].last, hireDates[index], salarys[index]);
     employees.push(employee);
   }
-  sortArray("load");
+  return employees;
 }
 
-function sortArray(event) {
-  //initial sort; by last name
-  if (event === "load") {
-    employees.sort((firstUser, secondUser) => {
-      if (firstUser["last"] === secondUser["last"]) {
-        if (firstUser["first"] < secondUser["first"]) {
-          return -1;
-        } else {
-          return 1;
-        }
-      }
-      if (firstUser["last"] < secondUser["last"]) {
-        return -1;
-      }
-      return 1;
-    });
-    // employees.reverse();
-    createTableHead();
-    printUserDataOnTable();
+async function generateTableDatas() {
+  // request and format the response into an arrays for table header and table body
+  let { users, usersHead } = await getUserNames(fetchNames);
+  let { hireDates, hireHead } = await getHireDates(fetchHireDates);
+  let { salarys, salarysHead } = await getSalarys(fetchSalarys);
 
-    let col = document.querySelector(`[data-col="last"]`);
-    col.dataset.direct = "reverse";
-    return;
-  }
-  //choosed column to sort based on "data-col" from event, setup wich sort direction to choose based on dataset too
-  const sortType = event.target.dataset.col;
-  let choosedColDirection = event.target.dataset.direct;
-  let sortDirection = "reverse";
+  let tableHeadList = createTableHead(usersHead, hireHead, salarysHead);
+  let employeeList = createEmployees(users, hireDates, salarys);
 
-  //sorting by employees Name
-  if (sortType === "first" || sortType === "last") {
-    employees.sort((firstUser, secondUser) => {
-      if (firstUser["last"] === secondUser["last"]) {
-        if (firstUser["first"] < secondUser["first"]) {
-          return -1;
-        } else {
-          return 1;
-        }
-      }
-      if (firstUser[sortType] < secondUser[sortType]) {
-        return -1;
-      }
-      return 1;
-    });
+  employeeList.sort((a, b) => sortNames(a, b));
+
+  printTable(tableHeadList, employeeList);
+}
+
+function printTable(tableHeadList, employeesList) {
+  $("#employees").bootstrapTable({
+    height: 550,
+    locale: $("#locale").val(),
+    columns: tableHeadList,
+    data: employeesList,
+  });
+}
+
+function sortSalaryByNumbers(a, b, firstUserDatas, secondsUserDatas) {
+  return firstUserDatas.salaryInt - secondsUserDatas.salaryInt;
+}
+
+function sortNames(firstUserName, secondUserName, firstEmployeeData = false, secondEmployeeData = false) {
+  const sortByFirstName = firstUserName === firstEmployeeData.first;
+  const sortByLastName = firstUserName === firstEmployeeData.last;
+  let firstLoad = false;
+
+  if (!sortByFirstName && !sortByFirstName) {
+    // if first laod, reassign variables because of different arguments used
+    firstLoad = true;
+    firstEmployeeData = firstUserName;
+    secondEmployeeData = secondUserName;
+    firstUserName = firstUserName.last;
+    secondUserName = secondUserName.last;
   }
 
-  //sorting by Salary
-  if (sortType === "salary") {
-    employees.sort((firstUser, secondUser) => {
-      let firstInt = parseInt(firstUser.salaryInt);
-      let secondtInt = parseInt(secondUser.salaryInt);
-      return firstInt - secondtInt;
-    });
+  if (sortByFirstName) {
+    if (firstUserName !== secondUserName) {
+      return firstUserName < secondUserName ? -1 : 1;
+    }
+    return firstEmployeeData.last < secondEmployeeData.last ? -1 : 1;
   }
+  if (sortByLastName || firstLoad === true) {
+    if (firstUserName !== secondUserName) {
+      return firstUserName < secondUserName ? -1 : 1;
+    }
+    return firstEmployeeData.first < secondEmployeeData.first ? -1 : 1;
+  }
+}
 
+function sortByDate(firstDate, secondDate, firstDateData, secondDateData) {
   //sort by Date
-  if (sortType === "hire date") {
-    employees.sort((firstUser, secondUser) => {
-      const { firstYear, secondYear, firstMonth, secondMonth, firstDay, secondDay } = getDateAsNumbersIndividually(firstUser, secondUser);
+  const firstTimesatamp = firstDateData.timestamp;
+  const secondTimesatamp = secondDateData.timestamp;
 
-      //Check the dates against each other so sort it by day, month and Year
-      if (firstYear === secondYear) {
-        if (firstMonth === secondMonth) {
-          return firstDay - secondDay;
-        }
-        return firstMonth - secondMonth;
-      }
-      return firstYear - secondYear;
-    });
-  }
-
-  //revert the sortet array if its already sorted and the relatetd col is clicked again
-  if (choosedColDirection === "reverse") {
-    employees.reverse();
-    sortDirection = "default";
-  }
-
-  //repaint the table; mark the columens with sort direction
-  createTableHead();
-  printUserDataOnTable();
-  let col = document.querySelector(`[data-col="${sortType}"]`);
-  col.dataset.direct = sortDirection;
+  return firstTimesatamp - secondTimesatamp;
 }
-
-function getDateAsNumbersIndividually(firstUser, secondUser) {
-  //get the Year's out from the Date as a number
-  let firstYear = new Date(firstUser.hireDate);
-  firstYear = parseInt(firstYear.toLocaleDateString("en-US", { year: "numeric" }));
-  let secondYear = new Date(secondUser.hireDate);
-  secondYear = parseInt(secondYear.toLocaleDateString("en-US", { year: "numeric" }));
-
-  //get the Month's' out from the Date as a number
-  let firstMonth = new Date(firstUser.hireDate);
-  firstMonth = parseInt(firstMonth.toLocaleDateString("en-US", { month: "2-digit" }));
-  let secondMonth = new Date(secondUser.hireDate);
-  secondMonth = parseInt(secondMonth.toLocaleDateString("en-US", { month: "2-digit" }));
-
-  //get the Day's out from the Date as a number
-  let firstDay = new Date(firstUser.hireDate);
-  firstDay = parseInt(firstDay.toLocaleDateString("en-US", { day: "2-digit" }));
-  let secondDay = new Date(secondUser.hireDate);
-  secondDay = parseInt(secondDay.toLocaleDateString("en-US", { day: "2-digit" }));
-
-  return { firstYear, secondYear, firstMonth, secondMonth, firstDay, secondDay };
-}
-
-function createHead(params) {}
