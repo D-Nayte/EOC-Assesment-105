@@ -1,11 +1,35 @@
 import { Employee, TableHead } from "./classes.js";
 
-generateTableDatas();
-window.addEventListener("load", () => {});
+let test = {
+  version: "0.6",
+  reqId: "0",
+  status: "ok",
+  sig: "2041401357",
+  table: {
+    cols: [
+      { id: "A", label: "", type: "string" },
+      { id: "B", label: "", type: "string" },
+    ],
+    rows: [
+      { c: [{ v: "first" }, { v: "last" }] },
+      { c: [{ v: "aa" }, { v: "z" }] },
+      { c: [{ v: "cc" }, { v: "aaac" }] },
+      { c: [{ v: "bb" }, { v: "z" }] },
+      { c: [{ v: "cc" }, { v: "aaab" }] },
+      { c: [{ v: "dd" }, { v: "z" }] },
+    ],
+    parsedNumHeaders: 0,
+  },
+};
+
+window.addEventListener("load", () => {
+  generateTableDatas();
+});
 
 async function getUserNames(response) {
   //creates an array with the names an an array with the table head informations
   response = await response;
+  //response = test;
   let userNames = response.table.rows;
 
   const newUserDataSet = userNames.map((each) => {
@@ -66,15 +90,11 @@ async function generateTableDatas() {
   let tableHeadList = createTableHead(usersHead, hireHead, salarysHead);
   let employeeList = createEmployees(users, hireDates, salarys);
 
-  employeeList.sort((a, b) => sortNames(a, b));
-
   printTable(tableHeadList, employeeList);
 }
 
 function printTable(tableHeadList, employeesList) {
   $("#employees").bootstrapTable({
-    height: 550,
-    locale: $("#locale").val(),
     columns: tableHeadList,
     data: employeesList,
   });
@@ -87,24 +107,17 @@ function sortSalaryByNumbers(a, b, firstUserDatas, secondsUserDatas) {
 function sortNames(firstUserName, secondUserName, firstEmployeeData = false, secondEmployeeData = false) {
   const sortByFirstName = firstUserName === firstEmployeeData.first;
   const sortByLastName = firstUserName === firstEmployeeData.last;
-  let firstLoad = false;
-
-  if (!sortByFirstName && !sortByFirstName) {
-    // if first laod, reassign variables because of different arguments used
-    firstLoad = true;
-    firstEmployeeData = firstUserName;
-    secondEmployeeData = secondUserName;
-    firstUserName = firstUserName.last;
-    secondUserName = secondUserName.last;
-  }
 
   if (sortByFirstName) {
+    console.log("SORT FIRSTNAME");
     if (firstUserName !== secondUserName) {
       return firstUserName < secondUserName ? -1 : 1;
     }
     return firstEmployeeData.last < secondEmployeeData.last ? -1 : 1;
   }
   if (sortByLastName || firstLoad === true) {
+    console.log("SORT LASTNAME");
+    // console.log(firstUserName, secondUserName, firstUserName === secondUserName);
     if (firstUserName !== secondUserName) {
       return firstUserName < secondUserName ? -1 : 1;
     }

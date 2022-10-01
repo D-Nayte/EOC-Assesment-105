@@ -15,13 +15,14 @@ export class Employee {
 
     function _hireDateFormate(hireDate) {
       //formatting to wanted Date format MMM DD YYYY
-      const dateSettings = { month: "short", day: "numeric", year: "numeric" };
+      const dateSettings = { month: "short", day: "2-digit", year: "numeric" };
       let date = new Date(hireDate);
       date = date.toLocaleDateString("en-US", dateSettings).replace(",", "");
       return date;
     }
 
     function _timestamp(hireDate) {
+      //timestamp for easy sorting
       const date = new Date(hireDate);
       return date.getTime();
     }
